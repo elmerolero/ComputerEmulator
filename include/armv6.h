@@ -1,17 +1,15 @@
 #pragma once
 #include <cstdint>
 #include <cstdbool>
+#include "../include/memory.h"
 
-class armV6 {
+class armv6 {
     public:
-
+        void ExecuteInstruction(void);
 
     private:
         std::uint32_t Registers[16];
-        std::uint8_t* Memory;
-
-        bool Carry;
-        bool Zero;
-        bool Overflow;
-        bool Negative;
+        memory Memory;     
 };
+
+void And(std::uint32_t a, std::uint32_t b);
