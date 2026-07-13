@@ -8,7 +8,3 @@ void armv6::ExecuteInstruction(void) {
     if(shift) operand = ;
     Registers[rd] = op(Registers[rn], operand);
 }
-
-void And(uint32_t a, uint32_t b) {
-    a & b;
-}

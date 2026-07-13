@@ -20,3 +20,4 @@ class armv6Cpsr {
         bool Negative;
         bool Overflow;
 };
+
