@@ -1,15 +1,23 @@
 #include "../include/decoder.h"
+#include <stdexcept>
 using namespace std;
 
 void decoder::SetInstruction(uint32_t instruction) {
     this -> Instruction = instruction;
 }
 
-void decoder::GetCondition(void) {
+bool (*const decoder::GetCondition())(const armv6Cpsr &cpsr) {
+    uint32_t index = this -> Instruction >> 28;
+    if(index > ConditionalsSize)
+        throw invalid_argument("decoder.invalid_conditional_index");
+    
+    if(index == 15)
+        return &ConditionAlways;
 
+    return this -> Conditionals[index];
 }
 
-bool (*const decoder::conditionals[])(const armv6Cpsr & const cpsr) = {
+bool (*const decoder::Conditionals[ConditionalsSize])(const armv6Cpsr & cpsr) = {
     &ConditionEqual,
     &ConditionNotEqual,
     &ConditionHigherOrSame,
@@ -27,15 +35,19 @@ bool (*const decoder::conditionals[])(const armv6Cpsr & const cpsr) = {
     &ConditionAlways
 };
 
+/*
+ * Represents the conditional operation EQ (Equal).
+ * Indicated when Zero (Z) == 1
+ */
 uint32_t And(uint32_t a, uint32_t b) {
-    return a + b;
+    return a & b;
 }
 
 /*
  * Represents the conditional operation EQ (Equal).
  * Indicated when Zero (Z) == 1
  */
-bool ConditionEqual(const armv6Cpsr & const cpsr) {
+bool ConditionEqual(const armv6Cpsr & cpsr) {
     return cpsr.IsZero();
 }
 
@@ -44,7 +56,7 @@ bool ConditionEqual(const armv6Cpsr & const cpsr) {
  * Represents the conditional operation NE (Not equal).
  * Indicated when Zero (Z) == 0
  */
-bool ConditionNotEqual(const armv6Cpsr & const cpsr) {
+bool ConditionNotEqual(const armv6Cpsr & cpsr) {
     return !cpsr.IsZero();
 }
 
@@ -54,7 +66,7 @@ bool ConditionNotEqual(const armv6Cpsr & const cpsr) {
  * or carry set).
  * Indicated when Carry (C) == 1
  */
-bool ConditionHigherOrSame(const armv6Cpsr & const cpsr) {
+bool ConditionHigherOrSame(const armv6Cpsr & cpsr) {
     return cpsr.IsCarry();
 }
 
@@ -63,7 +75,7 @@ bool ConditionHigherOrSame(const armv6Cpsr & const cpsr) {
  * or carry clear).
  * Indicated when Carry (C) == 0
  */
-bool ConditionLower(const armv6Cpsr & const cpsr) {
+bool ConditionLower(const armv6Cpsr & cpsr) {
     return !cpsr.IsCarry();
 }
 
@@ -71,7 +83,7 @@ bool ConditionLower(const armv6Cpsr & const cpsr) {
  * Represents the conditional operation MI (Negative or minus).
  * Indicated when Negative (N) == 1
  */
-bool ConditionMinus(const armv6Cpsr & const cpsr) {
+bool ConditionMinus(const armv6Cpsr & cpsr) {
     return cpsr.IsNegative();
 }
 
@@ -79,7 +91,7 @@ bool ConditionMinus(const armv6Cpsr & const cpsr) {
  * Represents the conditional operation PL (Positive or plus).
  * Indicated when Negative (N) == 0
  */
-bool ConditionPlus(const armv6Cpsr & const cpsr) {
+bool ConditionPlus(const armv6Cpsr & cpsr) {
     return !cpsr.IsNegative();
 }
 
@@ -87,7 +99,7 @@ bool ConditionPlus(const armv6Cpsr & const cpsr) {
  * Represents the conditional operation VS (Signed overflow).
  * Indicated when Negative (V) == 1
  */
-bool ConditionSignedOverflow(const armv6Cpsr & const cpsr) {
+bool ConditionSignedOverflow(const armv6Cpsr & cpsr) {
     return cpsr.IsOverflow();
 }
 
@@ -95,7 +107,7 @@ bool ConditionSignedOverflow(const armv6Cpsr & const cpsr) {
  * Represents the conditional operation VS (No signed overflow).
  * Indicated when Negative (V) == 0
  */
-bool ConditionNoSignedOverflow(const armv6Cpsr & const cpsr) {
+bool ConditionNoSignedOverflow(const armv6Cpsr & cpsr) {
     return !cpsr.IsOverflow();
 }
 
@@ -103,7 +115,7 @@ bool ConditionNoSignedOverflow(const armv6Cpsr & const cpsr) {
  * Represents the conditional operation HI (Unsigned higher)
  * Indicated when Carry (C) == 1 and Zero (Z) == 0
  */
-bool ConditionHigher(const armv6Cpsr & const cpsr) {
+bool ConditionHigher(const armv6Cpsr & cpsr) {
     return cpsr.IsCarry() && !cpsr.IsZero();
 }
 
@@ -111,7 +123,7 @@ bool ConditionHigher(const armv6Cpsr & const cpsr) {
  * Represents the conditional operation LS (Unsigned lower or same)
  * Indicated when Carry (C) == 0
  */
-bool ConditionLowerOrSame(const armv6Cpsr & const cpsr) {
+bool ConditionLowerOrSame(const armv6Cpsr & cpsr) {
     return cpsr.IsCarry();
 }
 
@@ -119,7 +131,7 @@ bool ConditionLowerOrSame(const armv6Cpsr & const cpsr) {
  * Represents the conditional operation GE (Signed greater than or equal)
  * Indicated when Negative (N) == Overflow (V)
  */
-bool ConditionGreaterOrEqual(const armv6Cpsr & const cpsr) {
+bool ConditionGreaterOrEqual(const armv6Cpsr & cpsr) {
     return cpsr.IsNegative() == cpsr.IsOverflow();
 }
 
@@ -127,7 +139,7 @@ bool ConditionGreaterOrEqual(const armv6Cpsr & const cpsr) {
  * Represents the conditional operation LT (Signed less than)
  * Indicated when Negative (N) != Overflow (V)
  */
-bool ConditionLessThan(const armv6Cpsr & const cpsr) {
+bool ConditionLessThan(const armv6Cpsr & cpsr) {
     return cpsr.IsNegative() != cpsr.IsOverflow();
 }
 
@@ -135,7 +147,7 @@ bool ConditionLessThan(const armv6Cpsr & const cpsr) {
  * Represents the conditional operation GT (Signed greater than)
  * Indicated when Zero (Z) == 0 and Negative (N) == Overflow (V)
  */
-bool ConditionGreaterThan(const armv6Cpsr & const cpsr) {
+bool ConditionGreaterThan(const armv6Cpsr & cpsr) {
     return cpsr.IsZero() && cpsr.IsNegative() == cpsr.IsOverflow();
 }
 
@@ -144,7 +156,7 @@ bool ConditionGreaterThan(const armv6Cpsr & const cpsr) {
  * Indicated when Zero (Z) == 0
  */
 
-bool ConditionLessThanOrEqual(const armv6Cpsr & const cpsr){
+bool ConditionLessThanOrEqual(const armv6Cpsr & cpsr){
     return cpsr.IsZero();
 }
 
@@ -152,6 +164,14 @@ bool ConditionLessThanOrEqual(const armv6Cpsr & const cpsr){
  * Represents the conditional operation AL (Always).
  * By default it is true
  */
-bool ConditionAlways(const armv6Cpsr & const cpsr) {
+bool ConditionAlways(const armv6Cpsr & cpsr) {
+    return true;
+}
+
+/*
+ * Represents the conditional operation AL (Always).
+ * By default it is true
+ */
+bool ConditionSpecialOperation(const armv6Cpsr & cpsr) {
     return true;
 }

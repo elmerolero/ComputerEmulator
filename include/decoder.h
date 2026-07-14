@@ -7,11 +7,12 @@ class decoder {
     public:
         void SetInstruction(std::uint32_t instruction);
 
-        void GetCondition(void);
+        bool (*const GetCondition())(const armv6Cpsr & cpsr);
 
     private:
         std::uint32_t Instruction;
-        static bool (*const conditionals[])(const armv6Cpsr & const cpsr);
+        static const size_t ConditionalsSize = 15;
+        static bool (*const Conditionals[ConditionalsSize])(const armv6Cpsr & cpsr);
 }; 
 
 std::uint32_t And(std::uint32_t a, std::uint32_t b);
@@ -30,3 +31,4 @@ bool ConditionLessThan(const armv6Cpsr & cpsr);
 bool ConditionGreaterThan(const armv6Cpsr & cpsr);
 bool ConditionLessThanOrEqual(const armv6Cpsr & cpsr);
 bool ConditionAlways(const armv6Cpsr & cpsr);
+bool ConditionSpecialOperation(const armv6Cpsr & cpsr);
