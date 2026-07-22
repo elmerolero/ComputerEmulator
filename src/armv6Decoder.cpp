@@ -1,8 +1,8 @@
-#include "../include/decoder.h"
+#include "../include/armv6Decoder.h"
 #include <stdexcept>
 using namespace std;
 
-void decoder::SetInstruction(uint32_t instruction) {
+void armv6Decoder::SetInstruction(uint32_t instruction) {
     this -> Instruction = instruction;
 }
 
@@ -17,7 +17,7 @@ bool (*const decoder::GetCondition())(const armv6Cpsr &cpsr) {
     return this -> Conditionals[index];
 }
 
-bool (*const decoder::Conditionals[ConditionalsSize])(const armv6Cpsr & cpsr) = {
+bool (*const armv6Decoder::Conditionals[ConditionalsSize])(const armv6Cpsr & cpsr) = {
     &ConditionEqual,
     &ConditionNotEqual,
     &ConditionHigherOrSame,

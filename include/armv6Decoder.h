@@ -3,7 +3,7 @@
 #include <cstdbool>
 #include "../include/armv6Cpsr.h"
 
-class decoder {
+class armv6Decoder {
     public:
         void SetInstruction(std::uint32_t instruction);
 
@@ -15,7 +15,6 @@ class decoder {
         static bool (*const Conditionals[ConditionalsSize])(const armv6Cpsr & cpsr);
 }; 
 
-std::uint32_t And(std::uint32_t a, std::uint32_t b);
 bool ConditionEqual(const armv6Cpsr & cpsr);
 bool ConditionNotEqual(const armv6Cpsr & cpsr);
 bool ConditionHigherOrSame(const armv6Cpsr & cpsr);
